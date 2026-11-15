@@ -28,3 +28,23 @@ A retry should never be treated as guaranteed recovery. The system should record
 `gateway_technical_error` was difficult to classify because it describes a technical failure involving a payment-processing partner, but does not tell us whether the issue is temporary or persistent.
 
 It belongs to **`bank_or_payment_processing`** because the failure is related to payment processing rather than a customer mistake. However, its retry policy is conditional: a limited retry may be reasonable if the issue is temporary, but repeated retries are not useful if the partner's service remains unavailable. The system should therefore use a delay, limit further attempts, and record the outcome.
+
+## Checkout Abandonment
+
+An order with status `created` has not been paid yet. It may indicate checkout drop-off if the customer started checkout but did not complete payment.
+
+However, `created` alone does not prove abandonment. The system should check whether a successful payment followed and use an appropriate observation period before classifying an order as abandoned.
+
+Checkout abandonment is tracked separately from payment failures because there may be no payment error to classify.
+
+## Observed Error Fields
+
+The taxonomy now includes two additional fields: `error_source` and `error_step`.
+
+These fields help distinguish where a failure occurred and at what stage of the payment process. They are based on errors observed during Razorpay Test Mode experiments.
+
+For example:
+- `payment_failed`: source `gateway`, step `payment_authorization`.
+- `international_transaction_not_allowed`: source `business`, step `payment_initiation`.
+
+The `error_reason`, `error_source`, and `error_step` fields provide more useful classification information than a generic error code alone.
